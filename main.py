@@ -5,7 +5,7 @@ from PIL import ImageDraw, Image, ImageTk
 class App:
     def __init__(self, master):
 
-        image = Image.open("/home/martin/Documents/Programmieren/Python/DataGrabber/polschuh_p2_2.png")
+        image = Image.open("polschuh_p2_2.png")
         basewidth = 1000
         wpercent = (basewidth / float(image.size[0]))
         hsize = int((float(image.size[1]) * float(wpercent)))
