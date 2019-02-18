@@ -1,6 +1,7 @@
 import tkinter
 from PIL import ImageDraw, Image, ImageTk
 import os
+import math
 
 class App:
     def __init__(self, master):
@@ -18,9 +19,6 @@ class App:
         self.canvas.pack(side=tkinter.RIGHT)
         self.image_tk = ImageTk.PhotoImage(image)
 
-        self.origin = tkinter.Button(frame, text="Origin", fg="red", command=self.set_origin)
-        self.origin.pack(side=tkinter.TOP)
-
         self.x_tuple_1 = tkinter.Button(frame, text="x - axis point 1", command=self.set_x_axis_1)
         self.x_tuple_1.pack(side=tkinter.TOP)
 
@@ -35,6 +33,10 @@ class App:
         self.x_entry_2.pack(side=tkinter.TOP)
         self.x_entry_2.insert(0, "1")
 
+        self.x_axis_log = tkinter.IntVar()
+        self.x_log_button = tkinter.Checkbutton(frame, text="x-axis logarithmic", variable = self.x_axis_log,command=self.set_x_axis_log)
+        self.x_log_button.pack(side=tkinter.TOP)
+
 
 
         self.y_tuple = tkinter.Button(frame, text="y - axis", command=self.set_y_axis)
@@ -43,6 +45,16 @@ class App:
         self.y_entry = tkinter.Entry(frame, width=5)
         self.y_entry.pack(side=tkinter.TOP)
         self.y_entry.insert(0, "1")
+
+
+        self.cla = tkinter.Button(frame, text="Clear ALL values", command=self.clear_values)
+        self.cla.pack(side=tkinter.TOP)
+
+        self.clv = tkinter.Button(frame, text="Clear last value", command=self.clear_one)
+        self.clv.pack(side=tkinter.TOP)
+
+        self.textfield = tkinter.Text(frame,width = 25,height = 25)
+        self.textfield.pack(side=tkinter.TOP)
 
 
         # Prevents garbage collection
@@ -62,25 +74,36 @@ class App:
         self.x_tuple_1 = (0, 0, 1)
         self.x_tuple_2 = (0, 0, 1)
         self.x_axis_y_component = 0
+        self.x_axis_log_val = False
 
         self.a_x = 1
         self.b_x = 0
 
         self.y_tuple = (1, 1)
 
+        self.values = []
+
+        self.update_view = tkinter.Button(frame, text="Update Values", command=self.update_textfield())
+        self.update_view.pack(side=tkinter.TOP)
+
 
     def x_from_pixel(self,x_pixel):
-        return self.a_x*x_pixel+self.b_x
+        if self.x_axis_log_val == 0:
+            return self.a_x*x_pixel+self.b_x
+        else:
+            return math.exp(self.a_x*x_pixel+self.b_x)
 
     def xy_callback(self, event):
         self.check_listeners(event.x, event.y)
         print("clicked at: x -> {}; y -> {}".format(self.x_from_pixel(event.x), event.y))
+        self.update_textfield()
 
     def check_listeners(self, input_x, input_y):
         if self.listen_origin == True:
             self.origin = (input_x, input_y)
             print("Origin set to x -> {}; y -> {}".format(input_x, input_y))
             self.listen_origin = False
+
 
         elif self.listen_xaxis_1 == True:
             s = float(self.x_entry_1.get())
@@ -94,19 +117,48 @@ class App:
             print("XPoint 2:{},{} with value {}".format(self.x_tuple_2[0], self.x_tuple_2[1], self.x_tuple_2[2]))
             self.listen_xaxis_2 = False
 
-        self.calculate_x_scaling()
+        else:
+            self.values.append((input_x,input_y))
+            self.update_textfield()
+
 
 
     def calculate_x_scaling(self):
         x1 = self.x_tuple_1[0]
         x2 = self.x_tuple_2[0]
 
-        x_1_val = self.x_tuple_1[2]
-        x_2_val = self.x_tuple_2[2]
+        if self.x_axis_log_val == 1:
+            try:
+                x_1_val = math.log(self.x_tuple_1[2])
+                x_2_val = math.log(self.x_tuple_2[2])
+            except ValueError:
+                print("Log scaling with invalid points")
+        else:
+            x_1_val = self.x_tuple_1[2]
+            x_2_val = self.x_tuple_2[2]
+
         self.x_axis_y_component = (self.x_tuple_1[1]+self.x_tuple_2[1])/2
 
-        self.a_x = (x_2_val-x_1_val)/(x2-x1)
-        self.b_x = x_1_val-self.a_x*x1
+        try:
+            self.a_x = (x_2_val-x_1_val)/(x2-x1)
+            self.b_x = x_1_val-self.a_x*x1
+        except ZeroDivisionError:
+            print("X axis points are at the same coordinate")
+        except UnboundLocalError:
+            print("There is a problem with the x-coordinate points, please reset")
+
+
+
+    def update_textfield(self):
+        self.calculate_x_scaling()
+        self.textfield.delete('1.0', tkinter.END)
+        for i in range(len(self.values)):
+            self.textfield.insert("{}.0".format(i + 1),
+                                  "{0: >#010.4f};{1: >#010.4f}\n".format(self.x_from_pixel(self.values[i][0]),
+                                                                         self.values[i][1]))
+            #self.textfield.insert("{}.0".format(i + 1),
+            #                      "{};{}\n".format(round(self.x_from_pixel(self.values[i][0]),10),
+            #                                                             round(self.values[i][1],10)))
 
     def set_origin(self):
         self.listen_origin = True
@@ -124,6 +176,18 @@ class App:
     def set_y_axis(self):
         self.listen_yaxis = True
         print("Set yax")
+
+    def set_x_axis_log(self):
+        self.x_axis_log_val = self.x_axis_log.get()
+        print("X-axis log:{}".format(self.x_axis_log_val))
+
+    def clear_values(self):
+        self.values = []
+        self.update_textfield()
+
+    def clear_one(self):
+        self.values = self.values[:-1]
+        self.update_textfield()
 
 
 root = tkinter.Tk()
