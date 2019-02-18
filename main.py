@@ -1,11 +1,11 @@
 import tkinter
 from PIL import ImageDraw, Image, ImageTk
-
+import os
 
 class App:
     def __init__(self, master):
 
-        image = Image.open("polschuh_p2_2.png")
+        image = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"polschuh_p2_2.png"))
         basewidth = 1000
         wpercent = (basewidth / float(image.size[0]))
         hsize = int((float(image.size[1]) * float(wpercent)))
