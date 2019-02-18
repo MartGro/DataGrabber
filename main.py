@@ -63,11 +63,18 @@ class App:
         self.x_tuple_2 = (0, 0, 1)
         self.x_axis_y_component = 0
 
+        self.a_x = 1
+        self.b_x = 0
+
         self.y_tuple = (1, 1)
+
+
+    def x_from_pixel(self,x_pixel):
+        return self.a_x*x_pixel+self.b_x
 
     def xy_callback(self, event):
         self.check_listeners(event.x, event.y)
-        print("clicked at: x -> {}; y -> {}".format(event.x, event.y))
+        print("clicked at: x -> {}; y -> {}".format(self.x_from_pixel(event.x), event.y))
 
     def check_listeners(self, input_x, input_y):
         if self.listen_origin == True:
@@ -76,13 +83,13 @@ class App:
             self.listen_origin = False
 
         elif self.listen_xaxis_1 == True:
-            s = self.x_entry_1.get()
+            s = float(self.x_entry_1.get())
             self.x_tuple_1 = (input_x, input_y, s)
             print("XPoint 1:{},{} with value {}".format(self.x_tuple_1[0], self.x_tuple_1[1], self.x_tuple_1[2]))
             self.listen_xaxis_1 = False
 
         elif self.listen_xaxis_2 == True:
-            s = self.x_entry_2.get()
+            s = float(self.x_entry_2.get())
             self.x_tuple_2 = (input_x, input_y, s)
             print("XPoint 2:{},{} with value {}".format(self.x_tuple_2[0], self.x_tuple_2[1], self.x_tuple_2[2]))
             self.listen_xaxis_2 = False
@@ -94,8 +101,12 @@ class App:
         x1 = self.x_tuple_1[0]
         x2 = self.x_tuple_2[0]
 
+        x_1_val = self.x_tuple_1[2]
+        x_2_val = self.x_tuple_2[2]
         self.x_axis_y_component = (self.x_tuple_1[1]+self.x_tuple_2[1])/2
 
+        self.a_x = (x_2_val-x_1_val)/(x2-x1)
+        self.b_x = x_1_val-self.a_x*x1
 
     def set_origin(self):
         self.listen_origin = True
