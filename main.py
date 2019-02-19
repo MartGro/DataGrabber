@@ -4,13 +4,17 @@ import os
 import math
 
 class App:
-    def __init__(self, master):
+    def __init__(self, master, imagepath,basewidth = 900,basehight = 700):
 
-        image = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"polschuh_p2_2.png"))
-        basewidth = 1000
+        image = Image.open(imagepath)
         wpercent = (basewidth / float(image.size[0]))
+        hpercent = (basehight / float(image.size[1]))
         hsize = int((float(image.size[1]) * float(wpercent)))
-        image = image.resize((basewidth, hsize), Image.ANTIALIAS)
+        if hsize > basehight:
+            wsize =int((float(image.size[0]) * float(hpercent)))
+            image = image.resize((wsize, basehight), Image.ANTIALIAS)
+        else:
+            image = image.resize((basewidth, hsize), Image.ANTIALIAS)
 
         frame = tkinter.Frame(master)
         frame.pack()
@@ -54,7 +58,7 @@ class App:
         self.y_entry_2.insert(0, "1")
 
         self.y_axis_log = tkinter.IntVar()
-        self.y_log_button = tkinter.Checkbutton(frame, text="y-axis logarithmic", variable = self.x_axis_log,command=self.set_y_axis_log)
+        self.y_log_button = tkinter.Checkbutton(frame, text="y-axis logarithmic", variable = self.y_axis_log,command=self.set_y_axis_log)
         self.y_log_button.pack(side=tkinter.TOP)
 
 
@@ -78,7 +82,9 @@ class App:
         self.listen_xaxis_1 = False
         self.listen_xaxis_2 = False
 
-        self.listen_yaxis = False
+        self.listen_yaxis_1 = False
+        self.listen_yaxis_2 = False
+
 
         self.origin = (0, 0)
         # xval,yval,val
@@ -235,6 +241,6 @@ class App:
 
 
 root = tkinter.Tk()
-app = App(root)
+app = App(root,os.path.join(os.path.dirname(os.path.realpath(__file__)),"OSRAM_LED.png"))
 root.mainloop()
 root.destroy()
